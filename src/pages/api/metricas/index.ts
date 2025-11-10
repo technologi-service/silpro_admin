@@ -3,16 +3,16 @@ import prisma from '../../../db/prisma';
 
 export const GET: APIRoute = async () => {
   try {
-    // Consulta los datos desde el modelo vcs
-    const clientes = await prisma.vcs.findMany({
+    // Consulta los datos desde el modelo clientes_csv
+    const clientes = await prisma.clientes_csv.findMany({
       select: {
-        segmento_actual: true,
+        segmento: true,
       },
     });
 
-    // Contar la cantidad de clientes por segmento actual
+    // Contar la cantidad de clientes por segmento
     const segmentCounts = clientes.reduce((acc: Record<string, number>, cliente) => {
-      const segmento = cliente.segmento_actual || 'Sin segmento';
+      const segmento = cliente.segmento || 'Sin segmento';
       acc[segmento] = (acc[segmento] || 0) + 1;
       return acc;
     }, {});

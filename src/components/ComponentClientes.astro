@@ -14,9 +14,8 @@ const {data, error} = await Astro.callAction(actions.getAllClientes, {  })
 					return (
 						<div class="border rounded-lg p-6 bg-gradient-to-br from-blue-900 to-green-800 shadow-lg transform hover:scale-105 transition-transform duration-300">
 							<div class="text-xl font-bold text-white mb-2">ID Cliente: <span class="text-yellow-300">{cliente.id_cliente ?? 'Sin ID'}</span></div>
-							<div class="text-md text-gray-200 mb-1">Segmento Anterior: <span class="text-yellow-200">{cliente.segmento_anterior ?? 'Sin segmento'}</span></div>
-							<div class="text-md text-gray-200 mb-1">Segmento Actual: <span class="text-yellow-200">{cliente.segmento_actual ?? 'Sin segmento'}</span></div>
-							<div class="text-md text-gray-200">Categoría Cognitiva: <span class="text-yellow-200">{cliente.categoria_cognitiva ?? 'Sin categoría'}</span></div>
+							<div class="text-md text-gray-200 mb-1">Nombre: <span class="text-yellow-200">{cliente.nombre_empresa ?? 'Sin nombre'}</span></div>
+							<div class="text-md text-gray-200">Segmento Actual: <span class="text-yellow-200">{cliente.segmento ?? 'Sin segmento'}</span></div>
 						</div>
 					);
 				})}

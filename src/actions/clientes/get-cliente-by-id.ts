@@ -11,8 +11,8 @@ export const getClienteById = defineAction({
   handler: async ({  id_cliente }) => {
     try {
       // Busca las métricas del cliente por id
-      const metricas = await prisma.clientes.findUnique({
-        where: { id: id_cliente },
+      const metricas = await prisma.clientes_csv.findUnique({
+        where: { id_rfm: id_cliente },
       });
       if (!metricas) {
         return null;
