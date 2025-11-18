@@ -1,0 +1,113 @@
+---
+import '../styles/global.css';
+import { actions } from "astro:actions";
+const { data, error } = await Astro.callAction(actions.getSegmentosVcs, {});
+
+// Agrupa los segmentos por categoría y los ordena por id de 1 a 5
+let grupos: Record<string, any[]> = {};
+if (Array.isArray(data)) {
+  for (const segmento of data) {
+    if (!grupos[segmento.estrellas]) grupos[segmento.estrellas] = [];
+    grupos[segmento.estrellas].push(segmento);
+  }
+  // Ordenar cada grupo por el campo id de 1 a 5
+  for (const key in grupos) {
+    grupos[key].sort((a, b) => a.id - b.id);
+  }
+}
+---
+
+<section class="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+  <div class="w-full max-w-4xl bg-white rounded-3xl shadow-2xl p-10">
+    <h2 class="text-4xl font-extrabold text-center text-indigo-700 mb-8">Gestión de Segmentos</h2>
+    {error && <p class="text-red-500 text-center mb-4">{error.message}</p>}
+    {Object.keys(grupos).length > 0 ? (
+      Object.entries(grupos).map(([nombreGrupo, segmentos]) => (
+        <div class="mb-12 border border-gray-300 rounded-lg p-6 bg-gray-50 shadow-sm">
+          <h3 class="text-3xl font-bold text-indigo-700 mb-6 text-center">{nombreGrupo}</h3>
+          <form class="space-y-6 grupo-form" autocomplete="off" data-grupo={nombreGrupo}>
+            <div class="grid gap-6">
+              {segmentos.map((segmento, idx) => (
+                <div class="grid grid-cols-4 gap-4 items-center bg-white p-4 rounded-lg shadow-md" data-segmento={segmento.id}>
+                  <input type="hidden" name="id" value={segmento.id} />
+                  <div class="flex flex-col gap-1">
+                    <label class="text-md font-semibold text-gray-800">Nombre del Segmento</label>
+                    <input type="text" name={`estrellas_${idx}`} value={segmento.estrellas ?? ''} class="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="Nombre del segmento" />
+                  </div>
+                  <div class="flex flex-col gap-1">
+                    <label class="text-md font-semibold text-gray-800">Score Mínimo</label>
+                    <input type="number" step="0.01" name={`score_min_${idx}`} value={segmento.score_min ?? ''} class="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="Score mínimo" />
+                  </div>
+                  <div class="flex flex-col gap-1">
+                    <label class="text-md font-semibold text-gray-800">Score Máximo</label>
+                    <input type="number" step="0.01" name={`score_max_${idx}`} value={segmento.score_max ?? ''} class="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="Score máximo" />
+                  </div>
+                  <div class="flex flex-col gap-1">
+                    <label class="text-md font-semibold text-gray-800">Segmento</label>
+                    <input type="text" name={`segmento_${idx}`} value={segmento.segmento ?? ''} class="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="Segmento" />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div class="flex justify-end mt-4">
+              <button type="submit" class="px-4 py-2 bg-indigo-500 text-white font-bold rounded-md shadow hover:bg-indigo-600">Guardar Cambios</button>
+            </div>
+          </form>
+        </div>
+      ))
+    ) : (
+      <p class="text-center text-gray-500">No hay segmentos registrados.</p>
+    )}
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.grupo-form').forEach(form => {
+          form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const segmentos: { id: number, estrellas: string | null, score_min: number | null, score_max: number | null, segmento: string | null }[] = [];
+            const grupoDivs = form.querySelectorAll('[data-segmento]');
+            grupoDivs.forEach((div, idx) => {
+              const idInput = div.querySelector('input[name="id"]');
+              const id = idInput ? (idInput as HTMLInputElement).value : null;
+              const estrellasInput = div.querySelector(`input[name="estrellas_${idx}"]`) as HTMLInputElement | null;
+              const minInput = div.querySelector(`input[name="score_min_${idx}"]`) as HTMLInputElement | null;
+              const maxInput = div.querySelector(`input[name="score_max_${idx}"]`) as HTMLInputElement | null;
+              const segmentoInput = div.querySelector(`input[name="segmento_${idx}"]`) as HTMLInputElement | null;
+              const estrellas = estrellasInput ? estrellasInput.value : null;
+              const score_min = minInput ? parseFloat(minInput.value) : null;
+              const score_max = maxInput ? parseFloat(maxInput.value) : null;
+              const segmento = segmentoInput ? segmentoInput.value : null;
+
+              // Validación ajustada para permitir texto en estrellas
+              if (!estrellas || estrellas.trim() === '') {
+                alert(`El nombre del segmento en la posición ${idx + 1} no puede estar vacío.`);
+                throw new Error(`Nombre inválido en el segmento ${idx + 1}`);
+              }
+
+              segmentos.push({ id: Number(id), estrellas, score_min, score_max, segmento });
+            });
+            const payload = { rangos: segmentos };
+            console.log('Enviando grupo:', payload);
+            try {
+              const res = await fetch('/api/update-segmentos', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              });
+              const result = await res.json();
+              if (res.ok) {
+                console.log('Actualización exitosa:', result);
+                alert('Segmentos actualizados correctamente');
+              } else {
+                console.error('Errores en la actualización:', result.errores);
+                alert('Algunos segmentos no se pudieron actualizar. Revisa la consola para más detalles.');
+              }
+            } catch (error) {
+              console.error('Error al enviar la solicitud:', error);
+              alert('Error al conectar con el servidor. Intenta nuevamente.');
+            }
+          });
+        });
+      });
+    </script>
+  </div>
+</section>

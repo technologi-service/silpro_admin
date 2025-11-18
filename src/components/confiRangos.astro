@@ -7,8 +7,10 @@ const {data, error} = await Astro.callAction(actions.getRangos, {})
 let grupos: Record<string, any[]> = {};
 if (Array.isArray(data)) {
   for (const rango of data) {
-    if (!grupos[rango.nombre]) grupos[rango.nombre] = [];
-    grupos[rango.nombre].push(rango);
+    if (rango.nombre) {
+      if (!grupos[rango.nombre]) grupos[rango.nombre] = [];
+      grupos[rango.nombre].push(rango);
+    }
   }
 }
 ---
@@ -28,11 +30,11 @@ if (Array.isArray(data)) {
                   <input type="hidden" name="id" value={rango.id} />
                   <div class="flex flex-col gap-2">
                     <label class="text-md font-semibold text-gray-700">Min Valor</label>
-                    <input type="number" name={`min_valor_${idx}`} value={rango.min_valor ?? ''} class="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="Valor mínimo" />
+                    <input type="number" step="0.01" name={`min_valor_${idx}`} value={rango.min_valor ?? ''} class="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="Valor mínimo" />
                   </div>
                   <div class="flex flex-col gap-2">
                     <label class="text-md font-semibold text-gray-700">Max Valor</label>
-                    <input type="number" name={`max_valor_${idx}`} value={rango.max_valor ?? ''} class="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="Valor máximo" />
+                    <input type="number" step="0.01" name={`max_valor_${idx}`} value={rango.max_valor ?? ''} class="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="Valor máximo" />
                   </div>
                   <div class="flex flex-col gap-2">
                     <label class="text-md font-semibold text-gray-700">Puntuación</label>
@@ -65,7 +67,7 @@ if (Array.isArray(data)) {
         document.querySelectorAll('.grupo-form').forEach(form => {
           form.addEventListener('submit', async function(e) {
             e.preventDefault();
-            const rangos = [];
+            const rangos: { id: number, min_valor: number | null, max_valor: number | null, puntuacion: number | null }[] = [];
             const grupoDivs = form.querySelectorAll('[data-rango]');
             grupoDivs.forEach((div, idx) => {
               const idInput = div.querySelector('input[name="id"]');
@@ -73,8 +75,8 @@ if (Array.isArray(data)) {
               const minInput = div.querySelector(`input[name="min_valor_${idx}"]`) as HTMLInputElement | null;
               const maxInput = div.querySelector(`input[name="max_valor_${idx}"]`) as HTMLInputElement | null;
               const puntuacionInput = div.querySelector(`input[name="puntuacion_${idx}"]`) as HTMLInputElement | null;
-              const min_valor = minInput ? parseInt(minInput.value) : null;
-              const max_valor = maxInput ? parseInt(maxInput.value) : null;
+              const min_valor = minInput ? parseFloat(minInput.value) : null;
+              const max_valor = maxInput ? parseFloat(maxInput.value) : null;
               const puntuacion = puntuacionInput ? parseInt(puntuacionInput.value) : null;
               rangos.push({ id: Number(id), min_valor, max_valor, puntuacion });
             });
@@ -88,11 +90,11 @@ if (Array.isArray(data)) {
             const result = await res.json();
             console.log('Respuesta:', result);
 
-            // Mostrar popup de confirmación
+            // Mostrar popup de confirmación o error
             if (res.ok) {
-              alert('¡Cambios guardados exitosamente!');
+              alert('¡Datos guardados con éxito!');
             } else {
-              alert('Hubo un error al guardar los cambios.');
+              alert('Hubo un error al guardar los datos.');
             }
           });
         });

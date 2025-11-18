@@ -6,6 +6,7 @@ import { getVariables } from "./config-pesos/get-variables";
 import { updateVariable } from "./config-pesos/update-variables";
 import { getMetricasByCliente } from "./metricas/get-metricas-by-cliente";
 import { getSegmentos } from "./metricas/get-segmentos";
+import { getSegmentosVcs } from "./segmentos/get-segmentos";
 
 export const server = {
   getVariables,
@@ -15,5 +16,6 @@ export const server = {
   getAllPuntuacionesClientes,
   getSegmentos,
   getMetricasByCliente,
-  getClienteById
+  getClienteById,
+  getSegmentosVcs
 }
